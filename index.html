@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="./index.css" rel="stylesheet"/>
+    <link href="./index.css" rel="stylesheet" />
     <title>Color Mind</title>
 </head>
+
 <body>
     <canvas id="gameContainer" width="700px" height="960px"></canvas>
     <!-- <div class="container">
@@ -16,66 +18,113 @@
         <div class="item">4</div>      
       </div> -->
 </body>
+
 </html>
 <script>
     const canvas = document.getElementById("gameContainer");
     const ctx = canvas.getContext("2d");
 
-    const startPt = (canvas.width - 540)/2;
-    //실제 게임 영역 캔버스 그리기
-    ctx.strokeRect(startPt, 0, 540, 960);
+    const startPt = (canvas.width - 540) / 2;
+    const gameWidth = 540;
+    const gameHeight = 960;
 
+    //타이머
+   
+    //실제 게임 영역 캔버스 그리기
+    ctx.strokeRect(startPt, 0, gameWidth, gameHeight);
     //선 시작 선언
     ctx.beginPath();
     //시작점
     ctx.moveTo(startPt, 320);
     //이어질 부분
-    ctx.lineTo(540 + startPt, 320);
+    ctx.lineTo(gameWidth + startPt, 320);
     //선 그리기
     ctx.stroke();
 
-    ctx.strokeRect(startPt, 0, 300, 50);
-
-    
-    
     const width = canvas.width;
     const height = canvas.height;
 
-    let tankX = 0;
-    const tankDx = 3;
-    let tankLeftPressed = false;
-    let tankRightPressed = false;
+    //start 이미지
+    //300*300
+    var img = new Image();   // Create new img element
+    var startBtnX = startPt + (gameWidth - 300) / 2;
+    var startBtnY = gameHeight - 300;
+    var startBtnW = 300;
+    var startBtnH = 300;
+
+    img.onload = function () {
+        ctx.drawImage(img, startPt + (gameWidth - 300) / 2, gameHeight - 300, 300, 300);
+    };
+    img.src = '/assets/img/start-button.png';
+    // ctx.fillRect(25, 25, 100, 100);
+    // Add event listener to canvas element
+    canvas.addEventListener('click', function (event) {
+        // Control that click event occurred within position of button
+        // NOTE: This assumes canvas element is positioned at top left corner 
+        if (
+            event.x > startBtnX &&
+            event.x < startBtnX + startBtnW &&
+            event.y > startBtnY &&
+            event.y < startBtnY + startBtnH
+        ) {
+            // Executes if button was clicked!
+            start();
+        } else {
+            console.log("왜", event.x, startBtnX, startBtnX + startBtnW, event.y, startBtnY, startBtnY + startBtnH)
+        }
+    });
+
+    function start() {
+        clearCanvas();
+        
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(startPt, 0, gameWidth, gameHeight);
+    }
 
 
-const drawCanvas = () => {
-  ctx.lineWidth = 5;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(tankX, height - tankHeight);
-  ctx.lineTo(canvasWidth, canvasHeight);
-  ctx.stroke();
-  ctx.closePath();
-};
 
-    const draw = () => {
-        drawCanvas();
-  drawTarget();
-  drawMissile();
-}
-const drawTarget = () => {}
-const drawMissile = () => {}
 
-draw();
+    
+    var countDownDate = new Date();
+    console.log(countDownDate)
+
+    // Update the count down every 1 second
+    var x = setInterval(function() {
+
+    // Get today's date and time
+    var now = new Date().getTime();
+        
+    // Find the distance between now and the count down date
+    var distance = countDownDate - now;
+        
+    // Time calculations for days, hours, minutes and seconds
+    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+    // Output the result in an element with id="demo"
+    document.getElementById("demo").innerHTML = days + "d " + hours + "h "
+    + minutes + "m " + seconds + "s ";
+        
+    // If the count down is over, write some text 
+    if (distance < 0) {
+        clearInterval(x);
+        document.getElementById("demo").innerHTML = "EXPIRED";
+    }
+    }, 1000);
+
+
+    const drawTarget = () => { }
+    const drawMissile = () => { }
+
+    draw();
+
 </script>
 <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
     #gameContainer {
-      border: 1px solid black;
+        border: 1px solid black;
     }
-  </style>
+</style>
