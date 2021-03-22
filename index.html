@@ -28,8 +28,22 @@
     const gameWidth = 540;
     const gameHeight = 960;
 
+    //하늘, 분홍, 빨강, 주황, 보라, 노랑, 초록, 파랑, 회색
+    // const colorArr = [{ key: '하늘', value: '#9bb7d6' },
+    // { key: '분홍', value: '#da4f70' }, { key: '빨강', value: '#c02034' }, { key: '주황', value: '#f05442' }
+    //     , { key: '보라', value: '#595ca1' }, { key: '노랑', value: '#f0bf59' },
+    // { key: '초록', value: '#169c78' }, { key: '파랑', value: '#00498c' }, { key: '회색', value: '#808080' }];
+    const colorArr = {
+        '하늘': '#9bb7d6',
+        '분홍': '#da4f70', '빨강': '#c02034', '주황': '#f05442'
+        , '보라': '#595ca1', '노랑': '#f0bf59',
+        '초록': '#169c78', '파랑': '#00498c', '회색': '#808080'
+    };
+
+
     //타이머
-   
+    var timeLimit = 60;
+
     //실제 게임 영역 캔버스 그리기
     ctx.strokeRect(startPt, 0, gameWidth, gameHeight);
     //선 시작 선언
@@ -44,87 +58,232 @@
     const width = canvas.width;
     const height = canvas.height;
 
-    //start 이미지
-    //300*300
-    var img = new Image();   // Create new img element
-    var startBtnX = startPt + (gameWidth - 300) / 2;
-    var startBtnY = gameHeight - 300;
-    var startBtnW = 300;
-    var startBtnH = 300;
+    function clickedStart() {
+        //start 이미지
+        //300*300
 
-    img.onload = function () {
-        ctx.drawImage(img, startPt + (gameWidth - 300) / 2, gameHeight - 300, 300, 300);
-    };
-    img.src = '/assets/img/start-button.png';
-    // ctx.fillRect(25, 25, 100, 100);
-    // Add event listener to canvas element
-    canvas.addEventListener('click', function (event) {
-        // Control that click event occurred within position of button
-        // NOTE: This assumes canvas element is positioned at top left corner 
+        var startBtnX = startPt + (gameWidth - 300) / 2;
+        var startBtnY = gameHeight - 300;
+        var startBtnW = 300;
+        var startBtnH = 300;
+
+        drawImage(startBtnX, startBtnY, startBtnW, startBtnH, '/assets/img/start-button.png')
+
+        canvas.addEventListener('click', addStartEvent, true)
+    }
+
+    function addStartEvent(e) {
+        var startBtnX = 300;
+        var startBtnY = 820;
+        var startBtnW = 300;
+        var startBtnH = 160;
         if (
             event.x > startBtnX &&
-            event.x < startBtnX + startBtnW &&
+            event.x < 560 &&
             event.y > startBtnY &&
-            event.y < startBtnY + startBtnH
+            event.y < 970
+
         ) {
-            // Executes if button was clicked!
             start();
-        } else {
-            console.log("왜", event.x, startBtnX, startBtnX + startBtnW, event.y, startBtnY, startBtnY + startBtnH)
         }
-    });
+    }
+
+    function drawImage(x, y, width, height, src) {
+        this.width = width;
+        this.height = height;
+        this.x = x;
+        this.y = y;
+
+        var img = new Image();
+
+        img.onload = () => {
+            ctx.drawImage(img, this.x, this.y, this.width, this.height);
+        };
+        img.src = src;
+    }
+
 
     function start() {
+        canvas.removeEventListener('click', addStartEvent, true)
         clearCanvas();
-        
+        createRect(startPt + 50, 250, gameWidth - 90, 50, '#F7958E')
+        timeStart();
+        gameStart()
+
     }
 
     function clearCanvas() {
         ctx.clearRect(startPt, 0, gameWidth, gameHeight);
     }
 
+    //직사각형 만들기
+    function createRect(x, y, width, height, color) {
+        this.width = width;
+        this.height = height;
+        this.x = x;
+        this.y = y;
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
 
-
-
-    
-    var countDownDate = new Date();
-    console.log(countDownDate)
-
-    // Update the count down every 1 second
-    var x = setInterval(function() {
-
-    // Get today's date and time
-    var now = new Date().getTime();
-        
-    // Find the distance between now and the count down date
-    var distance = countDownDate - now;
-        
-    // Time calculations for days, hours, minutes and seconds
-    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-    // Output the result in an element with id="demo"
-    document.getElementById("demo").innerHTML = days + "d " + hours + "h "
-    + minutes + "m " + seconds + "s ";
-        
-    // If the count down is over, write some text 
-    if (distance < 0) {
-        clearInterval(x);
-        document.getElementById("demo").innerHTML = "EXPIRED";
     }
-    }, 1000);
+
+    function clearRect(x, y, width, height) {
+        this.width = width;
+        this.height = height;
+        this.x = x;
+        this.y = y;
+        ctx.clearRect(this.x, this.y, this.width, this.height);
+    }
 
 
-    const drawTarget = () => { }
-    const drawMissile = () => { }
+    //타이머
+    function timeStart() {
+        //progress bar 그리기
 
-    draw();
+        inputText(36, 'serif', startPt, 290, 60, '#F7958E')
+
+        var widthRect = gameWidth - 90;//440       
+        if (timeLimit === 60) {
+            timeLimit = 59;
+            var width = widthRect;
+
+            var id = setInterval(frame, 1000);
+            function frame() {
+                if (width <= 0) {
+                    clearInterval(id);
+                    timeLimit = 60;
+                    gameOver();
+                } else {
+                    ctx.clearRect(startPt, 0, startPt, 292)
+                    width -= widthRect / 60;
+                    inputText(36, 'serif', startPt, 290, timeLimit, '#F7958E')
+                    clearRect(startPt + 50, 250, widthRect, 50, '#ffffff00')
+                    createRect(startPt + 50, 250, widthRect, 50, '#ddd')
+                    createRect(startPt + 50, 250, width, 50, '#F7958E')
+
+                    timeLimit--;
+
+
+                }
+            }
+        }
+    }
+
+    function inputText(fontSize, fontName, x, y, text, color) {
+        this.fontSize = fontSize;
+        this.fontName = fontName;
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        ctx.fillStyle = this.color
+        ctx.font = `${this.fontSize}px ${this.fontName}`;
+        ctx.fillText(this.text, this.x, this.y)
+    }
+
+    //game over
+    function gameOver() {
+        clearCanvas()
+        inputText(36, 'serif', startPt, 290, 'game over')
+
+        var startBtnX = startPt + (gameWidth - 300) / 2;
+        var startBtnY = gameHeight - 300;
+        var startBtnW = 300;
+        var startBtnH = 300;
+
+        drawImage(startBtnX, startBtnY, startBtnW, startBtnH, '/assets/img/restart.png')
+        canvas.addEventListener('click', addStartEvent, true)
+        canvas.removeEventListener('click', addColorClickedEvent, true)
+    }
+
+    {
+        const colorName = pickRandomProperty(colorArr);
+        const colorHex = colorArr[colorName]
+        //game start : stage 1
+        function gameStart() {
+
+
+            createRect(startPt + 170, 500, 170, 170, colorHex);
+
+            inputText(36, 'serif', startPt, 400, colorName, colorHex)
+
+            canvas.addEventListener('click', addColorClickedEvent, true)
+
+        }
+
+        function addColorClickedEvent(e) {
+
+            const pos = {
+                x: e.clientX,
+                y: e.clientY
+            };
+
+            if (pos.x >= 340 && pos.x <= 510 && pos.y >= 590 && pos.y <= 760) {
+                if (colorMatch(colorName, colorHex) === 1) {
+                    clearRect(startPt + 170, 500, 170, 170);
+                    if (this.timeLimit < 60) {
+                        this.timeLimit += 1;
+                    }
+                    stageTwo();
+                }
+            }
+        }
+    }
+    function colorMatch(colorName, colorHex) {
+        this.colorName = colorName;
+        this.colorHex = colorHex;
+
+        if (colorArr[this.colorName] === this.colorHex) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    function stageTwo() {
+console.log(colorName)
+        const rightColorName = pickRandomProperty(colorArr);
+        const rightColorHex = colorArr[colorName]
+
+        createRect(startPt + 70, 500, 170, 170, rightColorHex);
+        createRect(startPt + 70 + 190, 500, 170, 170, colorHex);
+
+    }
+
+    //random값 가져오기
+    function pickRandomProperty(obj) {
+        var result;
+        var count = 0;
+        for (var prop in obj)
+            if (Math.random() < 1 / ++count)
+                result = prop;
+        return result;
+
+    }
+
+    function retryGame() {
+        start();
+    }
+
+
+    clickedStart()
+    // draw();
 
 </script>
 <style>
     #gameContainer {
         border: 1px solid black;
+    }
+
+    /* 타이머 */
+    #myProgress {
+        width: 60px;
+        background-color: #ddd;
+    }
+
+    #myBar {
+        width: 60px;
+        height: 30px;
+        background-color: #F7958E;
     }
 </style>
