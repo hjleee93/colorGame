@@ -29,6 +29,18 @@
     const startPt = (canvas.width - 540) / 2;
     const gameWidth = 540;
     const gameHeight = 960;
+    const canvasLeftMargin = 90;
+    const canvasTopMargin = 90;
+    const sqSize = 170;
+    var stage = 0;
+    const upperBox = 320;
+    const gameBox = 640;
+
+    var rightColorName = '';
+    var rightColorHex = '';
+
+    var rectArr = [];
+    var clickedColorName = '';
 
     //하늘, 분홍, 빨강, 주황, 보라, 노랑, 초록, 파랑, 회색
     // const colorArr = [{ key: '하늘', value: '#9bb7d6' },
@@ -44,26 +56,28 @@
 
 
     //타이머
-    var timeLimit = 60;
+    var timeLimit = 10000;
 
     //실제 게임 영역 캔버스 그리기
     ctx.strokeRect(startPt, 0, gameWidth, gameHeight);
     //선 시작 선언
     ctx.beginPath();
     //시작점
-    ctx.moveTo(startPt, 320);
+    ctx.moveTo(startPt, upperBox);
     //이어질 부분
-    ctx.lineTo(gameWidth + startPt, 320);
+    ctx.lineTo(gameWidth + startPt, upperBox);
     //선 그리기
     ctx.stroke();
 
     const width = canvas.width;
     const height = canvas.height;
 
+
+
     function clickedStart() {
         //start 이미지
         //300*300
-
+       
         var startBtnX = startPt + (gameWidth - 300) / 2;
         var startBtnY = gameHeight - 300;
         var startBtnW = 300;
@@ -105,14 +119,25 @@
     }
 
 
+    function drawStage() {
+        stage++;
+        clearRect(230, upperBox / 3, 200, 130)
+        inputText(100, 'serif', 300, upperBox / 3 * 2, stage, 'black')
+
+    }
     function start() {
         canvas.removeEventListener('click', addStartEvent, true)
         clearCanvas();
         createRect(startPt + 50, 250, gameWidth - 90, 50, '#F7958E')
+        inputText(36, 'serif', gameWidth / 2, upperBox / 3, 'STAGE', 'black')
+        stage = 0;
+        drawStage();
         timeStart();
-        gameStart()
+        gameStart();
 
     }
+
+
 
     function clearCanvas() {
         ctx.clearRect(startPt, 0, gameWidth, gameHeight);
@@ -124,8 +149,29 @@
         this.height = height;
         this.x = x;
         this.y = y;
+        this.color = color;
         ctx.fillStyle = color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    function rectArrays(x, y, colorName, rectArr) {
+        this.x = x;
+        this.y = y;
+        this.colorName = colorName;
+        this.rectArr = rectArr;
+
+        var rect = {
+            x1: this.x,
+            x2: this.x + sqSize,
+            y1: this.y,
+            y2: this.y + sqSize,
+            width: sqSize,
+            height: sqSize,
+            colorName: this.colorName,
+            colorHex: colorArr[this.colorName]
+        }
+        rectArr.push(rect);
+        return rectArr;
 
     }
 
@@ -137,31 +183,38 @@
         ctx.clearRect(this.x, this.y, this.width, this.height);
     }
 
+    function msToSec(ms){
+        var sec = parseFloat((ms%1000)/100)
+        let formatNum = (sec%1).toFixed(2).replace(/(^0+)./, "");
+        return parseInt((ms%1000)/100) +':'+formatNum;
+    }
 
     //타이머
     function timeStart() {
         //progress bar 그리기
 
-        inputText(36, 'serif', startPt, 290, 60, '#F7958E')
+        inputText(36, 'serif', startPt, 290, '10:00', '#F7958E')
 
-        var widthRect = gameWidth - 90;//440       
-        if (timeLimit === 60) {
-            timeLimit = 59;
+        console.log(msToSec(99999))
+
+        var widthRect = gameWidth - 120;//440       
+        if (timeLimit === 10) {
+            timeLimit = 9;
             var width = widthRect;
 
             var id = setInterval(frame, 1000);
             function frame() {
-                if (width <= 0) {
+                if (timeLimit <= 0) {
                     clearInterval(id);
-                    timeLimit = 60;
+                    timeLimit = 10;
                     gameOver();
                 } else {
                     ctx.clearRect(startPt, 0, startPt, 292)
-                    width -= widthRect / 60;
+                    width -= widthRect / 10;
                     inputText(36, 'serif', startPt, 290, timeLimit, '#F7958E')
-                    clearRect(startPt + 50, 250, widthRect, 50, '#ffffff00')
-                    createRect(startPt + 50, 250, widthRect, 50, '#ddd')
-                    createRect(startPt + 50, 250, width, 50, '#F7958E')
+                    clearRect(startPt + 100, 250, widthRect, 50, '#ffffff00')
+                    createRect(startPt + 100, 250, widthRect, 50, '#ddd')
+                    createRect(startPt + 100, 250, width, 50, '#F7958E')
 
                     timeLimit--;
 
@@ -190,12 +243,29 @@
 
         var startBtnX = startPt + (gameWidth - 300) / 2;
         var startBtnY = gameHeight - 300;
-        var startBtnW = 300;
-        var startBtnH = 300;
+        var startBtnW = 200;
+        var startBtnH = 200;
 
         drawImage(startBtnX, startBtnY, startBtnW, startBtnH, '/assets/img/restart.png')
-        canvas.addEventListener('click', addStartEvent, true)
-        canvas.removeEventListener('click', addStartEvent, true)
+        canvas.addEventListener('click', addRestartEvent, true)
+    }
+
+    function addRestartEvent() {
+
+        var startBtnX = startPt + (gameWidth - 300) / 2;;
+        var startBtnY = gameHeight - 300;
+        var startBtnW = 200;
+        var startBtnH = 200;
+        if (
+            event.x > startBtnX &&
+            event.x < 560 &&
+            event.y > startBtnY &&
+            event.y < 970
+
+        ) {
+            restart();
+        }
+
     }
 
 
@@ -217,9 +287,9 @@
 
         if (pos.x >= 340 && pos.x <= 510 && pos.y >= 590 && pos.y <= 760) {
             if (colorMatch(colorName, colorHex) === 1) {
-                clearRect(startPt + 170, 500, 170, 170);
-                if (this.timeLimit < 60) {
-                    this.timeLimit += 1;
+
+                if (timeLimit < 10) {
+                    timeLimit += 2;
                 }
                 stageTwo();
             }
@@ -238,23 +308,260 @@
     }
 
     function stageTwo() {
+
+        var rectArr = [];
         //클릭이벤트 제거
         canvas.removeEventListener('click', addColorClickedEvent, true)
+        // ctx.strokeRect(startPt,350, 100, 100);
+        clearRect(startPt, 350, 100, 100);
+        clearRect(startPt + 170, 500, 170, 170);
+        rightColorName = pickRandomProperty(colorArr);
+        rightColorHex = colorArr[rightColorName]
 
-        const rightColorName = pickRandomProperty(colorArr);
-        const rightColorHex = colorArr[rightColorName]
-
-
+        inputText(36, 'serif', startPt, 400, rightColorName, colorArr[pickRandomProperty(colorArr)])
 
         let copyArr = _.cloneDeep(colorArr);
         delete copyArr[rightColorName]
 
-        console.log("copyArr", copyArr)
-        console.log("colorArr", colorArr)
+        var rectPosArr = [0, 1]
 
-        createRect(startPt + 70, 500, 170, 170, rightColorHex);
-        createRect(startPt + 70 + 190, 500, 170, 170, pickRandomProperty(copyArr).colorHex);
+        //첫번째 배열이 1인경우 정답 먼저 출력
+        if (shuffle(rectPosArr)[0] === 1) {
+            createRect(startPt + 70, 500, sqSize, sqSize, rightColorHex);//correct rect
+            rectArrays(startPt + 70 + canvasLeftMargin, 500 + canvasTopMargin, rightColorName, rectArr)
 
+            const tempColor = pickRandomProperty(copyArr);
+            createRect(startPt + 70 + 190, 500, sqSize, sqSize, copyArr[tempColor]);//incorrect rect
+            rectArrays(startPt + 190 + 70 + canvasLeftMargin, 500 + canvasTopMargin, tempColor, rectArr)
+
+        } else {
+            const tempColor = pickRandomProperty(copyArr);
+            createRect(startPt + 70, 500, sqSize, sqSize, copyArr[tempColor]);//incorrect rect
+            rectArrays(startPt + 70 + canvasLeftMargin, 500 + canvasTopMargin, tempColor, rectArr)
+
+            createRect(startPt + 70 + 190, 500, sqSize, sqSize, rightColorHex);//correct rect    
+            rectArrays(startPt + 190 + 70 + canvasLeftMargin, 500 + canvasTopMargin, rightColorName, rectArr)
+
+        }
+
+        drawStage()
+
+        canvas.addEventListener('click', addColorClickedEventTwo, true)
+    }
+
+
+
+
+    function addColorClickedEventTwo(e) {
+
+        const pos = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
+
+        for (let i = 0; i < rectArr.length; i++) {
+            if ((rectArr[i].x1 === startPt + 70 + canvasLeftMargin) && (rectArr[i].y1 === canvasTopMargin + 500)) {
+                //1행1열
+                if (rectArr[i].x1 <= pos.x && rectArr[i].x2 >= pos.x && rectArr[i].y1 <= pos.y && rectArr[i].y2 >= pos.y) {
+                    clickedColorName = rectArr[i].colorName
+                    if (colorMatch(clickedColorName, rightColorHex) === 1) {
+                        if (timeLimit < 59) {
+                            timeLimit += 2;
+                        }
+                        console.log("11")
+                        stageThree()
+                    } else {
+                        if (timeLimit > 0) {
+                            timeLimit -= 1;
+                        }
+                    }
+
+                }
+            } if ((rectArr[i].x1 === startPt + 70 + canvasLeftMargin + 190) && (rectArr[i].y1 === canvasTopMargin + 500)) {
+                //1행 2열
+                if (rectArr[i].x1 <= pos.x && rectArr[i].x2 >= pos.x && rectArr[i].y1 <= pos.y && rectArr[i].y2 >= pos.y) {
+
+                    clickedColorName = rectArr[i].colorName
+
+                    if (colorMatch(clickedColorName, rightColorHex) === 1) {
+                        if (timeLimit < 59) {
+                            timeLimit += 2;
+                        }
+                        console.log('12')
+                        stageThree()
+                    } else {
+                        if (timeLimit > 0) {
+                            timeLimit -= 1;
+                        }
+                    }
+
+                }
+            }
+
+        }
+    }
+
+
+    function stageThree() {
+        drawStage()
+        console.log("스테이지 3")
+        var rectArr = [];
+        canvas.removeEventListener('click', addColorClickedEventTwo, true)
+        clearRect(startPt, 350, 100, 100);
+        clearRect(startPt, 500, 540, 170);
+
+        var playColor = [];
+
+        let copyArr = _.cloneDeep(colorArr);
+
+
+
+        var tempColor = pickRandomProperty(copyArr);
+        playColor.push(tempColor)
+        delete copyArr[tempColor]
+        console.log(playColor)
+        rectArrays(startPt + 70, 500, tempColor, rectArr)
+
+
+        delete copyArr[tempColor]
+        tempColor = pickRandomProperty(copyArr);
+        playColor.push(tempColor)
+        console.log(playColor)
+        rectArrays(startPt + 190 + 70, 500, tempColor, rectArr)
+
+        delete copyArr[tempColor]
+        tempColor = pickRandomProperty(copyArr);
+        playColor.push(tempColor)
+        rectArrays(startPt + 70, 500 + 190, tempColor, rectArr)
+
+        delete copyArr[tempColor]
+        tempColor = pickRandomProperty(copyArr);
+        playColor.push(tempColor)
+
+        rectArrays(startPt + 190 + 70, 500 + 190, tempColor, rectArr)
+
+        rightColorName = shuffle(playColor)[0];
+        rightColorHex = colorArr[rightColorName]
+
+        inputText(36, 'serif', startPt, 400, rightColorName, colorArr[pickRandomProperty(colorArr)])
+
+        const shuffledArr = shuffle(rectArr);
+
+        for (let i = 0; i < shuffledArr.length; i++) {
+            createRect(shuffledArr[i].x1, shuffledArr[i].y1, shuffledArr[i].width, shuffledArr[i].height, shuffledArr[i].colorHex);
+        }
+
+        canvas.addEventListener('click', addColorClickedEventThree, true)
+
+    }
+
+    function addColorClickedEventThree(e) {
+
+        const pos = {
+            x: e.clientX,
+            y: e.clientY
+        };
+
+
+        for (let i = 0; i < rectArr.length; i++) {
+            console.log(i, rectArr[i], pos)
+
+            if ((rectArr[i].x1 === startPt + 70) && (rectArr[i].y1 === 500)) {
+                //1행1열
+                if (rectArr[i].x1 + 90 <= pos.x && rectArr[i].x2 + 90 >= pos.x && rectArr[i].y1 + 100 <= pos.y && rectArr[i].y2 + 100 >= pos.y) {
+                    clickedColorName = rectArr[i].colorName
+
+                    if (colorMatch(clickedColorName, rightColorHex) === 1) {
+
+                        if (timeLimit < 59) {
+                            timeLimit += 2;
+                        }
+                        stageThree();
+                    } else {
+                        if (timeLimit > 0) {
+                            timeLimit -= 1;
+                        }
+                    }
+
+                }
+            }
+            // console.log(rectArr[i], pos,  canvasTopMargin + 600)
+            if ((rectArr[i].x1 === startPt + 70 + 190) && (rectArr[i].y1 === 500)) {
+                //1행 2열
+                if (rectArr[i].x1 + 90 <= pos.x && rectArr[i].x2 + 90 >= pos.x && rectArr[i].y1 + 100 <= pos.y && rectArr[i].y2 + 100 >= pos.y) {
+
+                    clickedColorName = rectArr[i].colorName
+                    console.log('12', clickedColorName)
+
+                    if (colorMatch(clickedColorName, rightColorHex) === 1) {
+                        console.log("정답~")
+                        if (timeLimit < 59) {
+                            timeLimit += 2;
+                        }
+                        stageThree()
+                    } else {
+                        if (timeLimit > 0) {
+                            timeLimit -= 1;
+                        }
+                    }
+
+                }
+            }
+
+            if ((rectArr[i].x1 === startPt + 70) && (rectArr[i].y1 + 90 === canvasTopMargin + 500 + 190)) {
+                //2행 1열
+                if (rectArr[i].x1 + 90 <= pos.x && rectArr[i].x2 + 90 >= pos.x && rectArr[i].y1 + 90 <= pos.y && rectArr[i].y2 + 90 >= pos.y) {
+
+                    clickedColorName = rectArr[i].colorName
+                    console.log('21', clickedColorName)
+
+                    if (colorMatch(clickedColorName, rightColorHex) === 1) {
+                        console.log("정답~")
+                        if (timeLimit < 59) {
+                            timeLimit += 2;
+                        }
+                        stageThree()
+                    } else {
+                        if (timeLimit > 0) {
+                            timeLimit -= 1;
+                        }
+                    }
+
+                }
+            }
+
+            if ((rectArr[i].x1 === startPt + 70 + 190) && (rectArr[i].y1 + 90 === canvasTopMargin + 500 + 190)) {
+                //2행 2열
+                if (rectArr[i].x1 + 90 <= pos.x && rectArr[i].x2 + 90 >= pos.x && rectArr[i].y1 + 90 <= pos.y && rectArr[i].y2 + 90 >= pos.y) {
+
+                    clickedColorName = rectArr[i].colorName
+
+                    console.log('22', clickedColorName)
+                    if (colorMatch(clickedColorName, rightColorHex) === 1) {
+                        console.log("정답~")
+                        if (timeLimit < 59) {
+                            timeLimit += 2;
+                        }
+                        stageThree()
+                    } else {
+                        if (timeLimit > 0) {
+                            timeLimit -= 1;
+                        }
+                    }
+
+                }
+            }
+
+        }
+    }
+
+    function shuffle(array) {
+        for (let i = 0; i < array.length; i++) {
+            let j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     }
 
     //random값 가져오기
@@ -268,7 +575,12 @@
 
     }
 
-    function retryGame() {
+    function restart() {
+        canvas.removeEventListener('click', addColorClickedEvent, true)
+
+        canvas.removeEventListener('click', addColorClickedEventTwo, true)
+        canvas.removeEventListener('click', addColorClickedEventThree, true)
+
         start();
     }
 
