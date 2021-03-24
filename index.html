@@ -57,6 +57,7 @@
 
     //타이머
     var timeLimit = 10000;
+    var addBar = 0;
 
     //실제 게임 영역 캔버스 그리기
     ctx.strokeRect(startPt, 0, gameWidth, gameHeight);
@@ -72,12 +73,10 @@
     const width = canvas.width;
     const height = canvas.height;
 
-
-
     function clickedStart() {
         //start 이미지
         //300*300
-       
+
         var startBtnX = startPt + (gameWidth - 300) / 2;
         var startBtnY = gameHeight - 300;
         var startBtnW = 300;
@@ -126,9 +125,10 @@
 
     }
     function start() {
+        canvas.removeEventListener('click', addRestartEvent, true)
         canvas.removeEventListener('click', addStartEvent, true)
         clearCanvas();
-        createRect(startPt + 50, 250, gameWidth - 90, 50, '#F7958E')
+
         inputText(36, 'serif', gameWidth / 2, upperBox / 3, 'STAGE', 'black')
         stage = 0;
         drawStage();
@@ -183,40 +183,70 @@
         ctx.clearRect(this.x, this.y, this.width, this.height);
     }
 
-    function msToSec(ms){
-        var sec = parseFloat((ms%1000)/100)
-        let formatNum = (sec%1).toFixed(2).replace(/(^0+)./, "");
-        return parseInt((ms%1000)/100) +':'+formatNum;
+    function msToSec(ms) {
+        var tempMs = parseFloat(ms / 1000)
+        var decimal = truncate(tempMs);
+        var sec = parseInt(ms / 1000)
+        var result = 0;
+
+        if (sec === 10) {
+            result = 10 + ':' + '00'
+
+        } else {
+            result = '0' + sec + ':' + decimal
+        }
+
+        return result;
     }
+    function truncate(ms) {
+        var str = ms.toString();
+        var idx = str.indexOf('.');
+        return idx != -1 ? str.slice(2, idx + 3) : str;
+    }
+
 
     //타이머
     function timeStart() {
         //progress bar 그리기
 
-        inputText(36, 'serif', startPt, 290, '10:00', '#F7958E')
+        //타이머 사이즈
+        var widthRect = 360.0
 
-        console.log(msToSec(99999))
-
-        var widthRect = gameWidth - 120;//440       
-        if (timeLimit === 10) {
-            timeLimit = 9;
+        var barSize = 0;
+        if (timeLimit === 10000) {
+            timeLimit = 9999;
             var width = widthRect;
 
-            var id = setInterval(frame, 1000);
+            //10ms 마다 실행
+            var id = setInterval(frame, 10);
+
             function frame() {
+                //타이머 종료
                 if (timeLimit <= 0) {
                     clearInterval(id);
-                    timeLimit = 10;
+                    timeLimit = 10000;
+
                     gameOver();
                 } else {
-                    ctx.clearRect(startPt, 0, startPt, 292)
-                    width -= widthRect / 10;
-                    inputText(36, 'serif', startPt, 290, timeLimit, '#F7958E')
-                    clearRect(startPt + 100, 250, widthRect, 50, '#ffffff00')
-                    createRect(startPt + 100, 250, widthRect, 50, '#ddd')
-                    createRect(startPt + 100, 250, width, 50, '#F7958E')
+                    ctx.clearRect(startPt, 0, startPt + 50, 292)
 
-                    timeLimit--;
+                    //10ms마다 줄어드는 bar 양
+                    width -= widthRect / 10000 * 10;
+
+                    inputText(36, 'serif', startPt + 15, 290, msToSec(timeLimit), '#F7958E')
+                    clearRect(startPt + 115, 250, widthRect, 50, '#ffffff00')
+                    createRect(startPt + 130, 250, widthRect, 50, '#ddd')
+
+                    //10초 이상 제한
+                    barSize = width + addBar
+                    if (barSize > 360) {
+                        createRect(startPt + 130, 250, width, 50, '#F7958E')
+
+                    } else {
+                        createRect(startPt + 130, 250, barSize, 50, '#F7958E')
+                    }
+
+                    timeLimit -= 10;
 
 
                 }
@@ -239,7 +269,8 @@
     //game over
     function gameOver() {
         clearCanvas()
-        inputText(36, 'serif', startPt, 290, 'game over')
+        inputText(36, 'serif', startPt, 290, 'game over', 'black')
+        inputText(36, 'serif', startPt, 500, stage, 'black')
 
         var startBtnX = startPt + (gameWidth - 300) / 2;
         var startBtnY = gameHeight - 300;
@@ -287,15 +318,31 @@
 
         if (pos.x >= 340 && pos.x <= 510 && pos.y >= 590 && pos.y <= 760) {
             if (colorMatch(colorName, colorHex) === 1) {
-
-                if (timeLimit < 10) {
-                    timeLimit += 2;
-                }
+                plusTime();
                 stageTwo();
             }
         }
     }
 
+    function plusTime() {
+        if (0 < timeLimit && timeLimit < 10800) {
+            //0.8초 증가
+            timeLimit += 800;
+            //타이머 바 증가 : 28.8
+            addBar += 360 / 10000 * 800;
+        }
+    }
+
+    function minusTime() {
+        if (10000 > timeLimit && timeLimit > 1000) {
+            //1초 빼기
+            timeLimit -= 1000;
+            //타이머 바 감소
+            addBar -= 360 / 10000 * 1000;
+        }
+    }
+
+    //정답 확인
     function colorMatch(colorName, colorHex) {
         this.colorName = colorName;
         this.colorHex = colorHex;
@@ -366,15 +413,10 @@
                 if (rectArr[i].x1 <= pos.x && rectArr[i].x2 >= pos.x && rectArr[i].y1 <= pos.y && rectArr[i].y2 >= pos.y) {
                     clickedColorName = rectArr[i].colorName
                     if (colorMatch(clickedColorName, rightColorHex) === 1) {
-                        if (timeLimit < 59) {
-                            timeLimit += 2;
-                        }
-                        console.log("11")
+                        plusTime()
                         stageThree()
                     } else {
-                        if (timeLimit > 0) {
-                            timeLimit -= 1;
-                        }
+                        minusTime();
                     }
 
                 }
@@ -385,15 +427,10 @@
                     clickedColorName = rectArr[i].colorName
 
                     if (colorMatch(clickedColorName, rightColorHex) === 1) {
-                        if (timeLimit < 59) {
-                            timeLimit += 2;
-                        }
-                        console.log('12')
+                        plusTime()
                         stageThree()
                     } else {
-                        if (timeLimit > 0) {
-                            timeLimit -= 1;
-                        }
+                        minusTime();
                     }
 
                 }
@@ -405,7 +442,6 @@
 
     function stageThree() {
         drawStage()
-        console.log("스테이지 3")
         var rectArr = [];
         canvas.removeEventListener('click', addColorClickedEventTwo, true)
         clearRect(startPt, 350, 100, 100);
@@ -473,15 +509,10 @@
                     clickedColorName = rectArr[i].colorName
 
                     if (colorMatch(clickedColorName, rightColorHex) === 1) {
-
-                        if (timeLimit < 59) {
-                            timeLimit += 2;
-                        }
+                        plusTime()
                         stageThree();
                     } else {
-                        if (timeLimit > 0) {
-                            timeLimit -= 1;
-                        }
+                        minusTime();
                     }
 
                 }
@@ -495,15 +526,10 @@
                     console.log('12', clickedColorName)
 
                     if (colorMatch(clickedColorName, rightColorHex) === 1) {
-                        console.log("정답~")
-                        if (timeLimit < 59) {
-                            timeLimit += 2;
-                        }
+                        plusTime()
                         stageThree()
                     } else {
-                        if (timeLimit > 0) {
-                            timeLimit -= 1;
-                        }
+                        minusTime();
                     }
 
                 }
@@ -517,15 +543,10 @@
                     console.log('21', clickedColorName)
 
                     if (colorMatch(clickedColorName, rightColorHex) === 1) {
-                        console.log("정답~")
-                        if (timeLimit < 59) {
-                            timeLimit += 2;
-                        }
+                        plusTime()
                         stageThree()
                     } else {
-                        if (timeLimit > 0) {
-                            timeLimit -= 1;
-                        }
+                        minusTime();
                     }
 
                 }
@@ -539,15 +560,10 @@
 
                     console.log('22', clickedColorName)
                     if (colorMatch(clickedColorName, rightColorHex) === 1) {
-                        console.log("정답~")
-                        if (timeLimit < 59) {
-                            timeLimit += 2;
-                        }
+                        plusTime()
                         stageThree()
                     } else {
-                        if (timeLimit > 0) {
-                            timeLimit -= 1;
-                        }
+                        minusTime();
                     }
 
                 }
@@ -577,7 +593,6 @@
 
     function restart() {
         canvas.removeEventListener('click', addColorClickedEvent, true)
-
         canvas.removeEventListener('click', addColorClickedEventTwo, true)
         canvas.removeEventListener('click', addColorClickedEventThree, true)
 
@@ -586,7 +601,6 @@
 
 
     clickedStart()
-    // draw();
 
 </script>
 <style>
